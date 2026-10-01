@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <!-- これまでのCSSはすべて同じなので省略せずにそのまま入れてください -->
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>レセクエスト</title>
+  <style>
+    /* ※ここには、先ほどまでのCSSをすべてそのまま貼り付けてください※ */
+  </style>
+</head>
+<body>
+  <!-- ※ここには、先ほどまでのHTML(<body>内のタグ)をすべてそのまま貼り付けてください※ -->
+  
+  <script>
+    // ※これまでのJavaScriptも基本はそのままですが、AI呼び出し部分だけ以下のように書き換えます※
+    
+    // ----- AI読取ボタンの処理（ここから） -----
+    document.getElementById('ai-btn').addEventListener('click', async () => {
+      if (!selectedBase64) return alert('レシート画像を選択してください。');
+      const aiBtn = document.getElementById('ai-btn');
+      const loadingMsg = document.getElementById('loading-msg');
+      aiBtn.disabled = true; loadingMsg.style.display = 'block';
+
+      try {
+        // GASの代わりにVercelの裏側(API)にデータを送る
+        const response = await fetch('/api/analyze', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ image: selectedBase64, mimeType: selectedMimeType })
+        });
+
+        const resultText = await response.text();
+        aiBtn.disabled = false; loadingMsg.style.display = 'none';
+
+        if (!response.ok) throw new Error(resultText);
+
+        // JSONを抽出して処理
+        let cleanText = resultText.replace(/```json/gi, '').replace(/```/g, '').trim();
+        const match = cleanText.match(/\{[\s\S]*\}/);
+        if (match) {
+          const res = JSON.parse(match[0]);
+          if (res.error) throw new Error(res.error);
+          if (res.total_amount) {
+            document.getElementById('amount').value = res.total_amount;
+          } else {
+            throw new Error("金額データが見つかりませんでした");
+          }
+        } else {
+          throw new Error("JSON形式でデータが返されませんでした");
+        }
+      } catch (err) {
+        aiBtn.disabled = false; loadingMsg.style.display = 'none';
+        alert('解析エラー: ' + err.message);
+      }
+    });
+    // ----- AI読取ボタンの処理（ここまで） -----
+
+    // 他の関数(loadData, saveData, renderUIなど)はそのまま貼り付けてください
+  </script>
+</body>
+</html>
