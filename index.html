@@ -1,21 +1,251 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-  <!-- これまでのCSSはすべて同じなので省略せずにそのまま入れてください -->
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>レセクエスト</title>
   <style>
-    /* ※ここには、先ほどまでのCSSをすべてそのまま貼り付けてください※ */
+    :root {
+      --bg-color: #121214; --card-bg: #1e1e24; --accent-color: #ffd700;
+      --text-color: #f0f0f5; --sub-text: #a0a0b0; --border-color: #2e2e38;
+      --danger-color: #ff5555; --success-color: #50fa7b; --income-color: #8be9fd;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: sans-serif; }
+    
+    body { background-color: var(--bg-color); color: var(--text-color); display: flex; justify-content: center; padding: 16px; padding-bottom: 80px; }
+    .app-container { width: 100%; max-width: 480px; display: flex; flex-direction: column; gap: 16px; }
+    
+    header { text-align: center; padding: 12px; background-color: var(--card-bg); border-radius: 12px; border: 1px solid var(--border-color); }
+    h1 { font-size: 1.5rem; color: var(--accent-color); }
+    .card { background-color: var(--card-bg); border-radius: 12px; padding: 16px; border: 1px solid var(--border-color); }
+    
+    .status-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+    .level-badge { background: linear-gradient(135deg, #e65c00, #F9D423); color: #000; font-weight: bold; padding: 4px 12px; border-radius: 20px; }
+    .gold-display { font-size: 1.2rem; font-weight: bold; color: var(--accent-color); margin-bottom: 8px; text-align: right; }
+    .exp-bar-container { width: 100%; height: 12px; background-color: #101014; border-radius: 6px; overflow: hidden; }
+    .exp-bar-fill { height: 100%; width: 0%; background: linear-gradient(90deg, #00b4db, #0083b0); transition: width 0.4s; }
+
+    .type-selector { display: flex; gap: 8px; margin-bottom: 12px; }
+    .type-btn { flex: 1; padding: 12px 8px; border: 1px solid var(--border-color); background: #101014; color: var(--sub-text); border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 0.9rem; }
+    .type-btn.active-expense { background: var(--danger-color); color: #000; border-color: var(--danger-color); }
+    .type-btn.active-income { background: var(--income-color); color: #000; border-color: var(--income-color); }
+
+    .camera-box { border: 2px dashed var(--border-color); border-radius: 8px; padding: 16px; text-align: center; background: #101014; cursor: pointer; margin-bottom: 12px; }
+    .camera-box input { display: none; }
+    .preview-img { max-width: 100%; max-height: 150px; border-radius: 8px; display: none; margin: 8px auto; }
+    .form-group { display: flex; flex-direction: column; gap: 6px; margin-bottom: 12px; }
+    input, select { background: #101014; border: 1px solid var(--border-color); color: var(--text-color); padding: 12px; border-radius: 6px; font-size: 1rem; }
+    
+    .btn { background: var(--accent-color); color: #000; border: none; padding: 14px; border-radius: 8px; font-weight: bold; width: 100%; cursor: pointer; font-size: 1rem; }
+    .btn-ai { background: linear-gradient(135deg, #8a2be2, #4169e1); color: #fff; margin-bottom: 12px; }
+    .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+    .loading-msg { display: none; text-align: center; color: var(--accent-color); font-size: 0.85rem; margin-bottom: 8px; }
+
+    .history-list { list-style: none; display: flex; flex-direction: column; gap: 8px; }
+    .history-item { display: flex; justify-content: space-between; align-items: center; padding: 10px 12px; background: #101014; border-radius: 6px; }
+    .history-item.expense { border-left: 4px solid var(--danger-color); }
+    .history-item.income { border-left: 4px solid var(--income-color); }
+    .empty-msg { text-align: center; color: var(--sub-text); padding: 12px; }
+    .btn-delete { background: transparent; border: 1px solid var(--danger-color); color: var(--danger-color); padding: 6px 10px; border-radius: 4px; font-size: 0.75rem; cursor: pointer; margin-left: 8px; }
+
+    .view-section { display: none; animation: fadeIn 0.3s ease; }
+    .view-section.active { display: block; }
+    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+    .bottom-nav { position: fixed; bottom: 0; left: 0; width: 100%; background: var(--card-bg); border-top: 1px solid var(--border-color); display: flex; justify-content: space-around; padding: 10px 0; z-index: 100; box-shadow: 0 -2px 10px rgba(0,0,0,0.5); }
+    .nav-item { flex: 1; text-align: center; color: var(--sub-text); font-size: 0.8rem; cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 4px; }
+    .nav-item.active { color: var(--accent-color); font-weight: bold; }
+    .nav-icon { font-size: 1.5rem; }
+
+    .cal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+    .cal-btn { background: #101014; border: 1px solid var(--border-color); color: var(--text-color); padding: 8px 16px; border-radius: 4px; cursor: pointer; }
+    .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; text-align: center; }
+    .cal-day-header { font-size: 0.8rem; color: var(--sub-text); margin-bottom: 4px; }
+    .cal-cell { background: #101014; border-radius: 4px; padding: 6px 2px; min-height: 50px; display: flex; flex-direction: column; justify-content: flex-start; border: 1px solid var(--border-color); }
+    .cal-date { font-size: 0.8rem; margin-bottom: 2px; }
+    .cal-amount { font-size: 0.65rem; font-weight: bold; margin-top: auto; }
+    .amount-exp { color: var(--danger-color); }
+    .amount-inc { color: var(--income-color); }
+
+    .achi-list { display: flex; flex-direction: column; gap: 10px; }
+    .achi-item { display: flex; align-items: center; gap: 12px; background: #101014; padding: 12px; border-radius: 8px; border: 1px solid var(--border-color); transition: 0.3s; }
+    .achi-item.locked { opacity: 0.4; filter: grayscale(100%); }
+    .achi-item.hidden-locked .achi-icon { filter: blur(2px); opacity: 0.7; }
+    .achi-icon { font-size: 2rem; background: var(--card-bg); padding: 8px; border-radius: 50%; min-width: 52px; text-align: center; }
+    .achi-info h3 { font-size: 0.95rem; color: var(--accent-color); margin-bottom: 4px; }
+    .achi-info p { font-size: 0.75rem; color: var(--sub-text); }
+    
+    .section-title { font-size: 1rem; margin-bottom: 12px; display: flex; align-items: center; gap: 8px; }
+    .section-title span { font-size: 0.75rem; background: #101014; padding: 2px 8px; border-radius: 12px; border: 1px solid var(--border-color); }
   </style>
 </head>
 <body>
-  <!-- ※ここには、先ほどまでのHTML(<body>内のタグ)をすべてそのまま貼り付けてください※ -->
-  
+
+  <div class="app-container">
+    <header><h1>⚔️ レセクエスト 🛡️</h1></header>
+
+    <div class="card">
+      <div class="status-header">
+        <span class="level-badge" id="level-display">Lv. 1</span>
+        <span style="font-size: 0.85rem; color: var(--sub-text);" id="exp-text">EXP: 0 / 100</span>
+      </div>
+      <div class="gold-display" id="gold-display">💰 0 G</div>
+      <div class="exp-bar-container"><div class="exp-bar-fill" id="exp-bar"></div></div>
+    </div>
+
+    <!-- ホーム（記録）タブ -->
+    <div id="view-home" class="view-section active">
+      <div class="card" style="margin-bottom: 16px;">
+        <h2 class="section-title">📜 クエスト報告</h2>
+        <div class="type-selector">
+          <button type="button" class="type-btn active-expense" id="btn-type-expense">⚔ 支出 (討伐)</button>
+          <button type="button" class="type-btn" id="btn-type-income">💰 収入 (報酬)</button>
+        </div>
+
+        <div class="camera-box" id="drop-area">
+          <span id="upload-label">📷 レシートを撮影 / 画像選択</span>
+          <img id="preview" class="preview-img">
+          <input type="file" id="camera-input" accept="image/*" capture="environment">
+        </div>
+        
+        <button type="button" class="btn btn-ai" id="ai-btn">🤖 AI読取 (オートバトル)</button>
+        <div class="loading-msg" id="loading-msg">🔮 解析中... (数秒かかります)</div>
+
+        <form id="record-form">
+          <div class="form-group">
+            <label style="font-size: 0.85rem; color: var(--sub-text);">カテゴリ</label>
+            <select id="category" required></select>
+          </div>
+          <div class="form-group">
+            <label style="font-size: 0.85rem; color: var(--sub-text);">金額 (円 / G) ※修正可能</label>
+            <input type="number" id="amount" placeholder="例: 1000" min="1" required>
+          </div>
+          <button type="submit" class="btn" id="submit-btn">クエスト達成！(+50 EXP)</button>
+        </form>
+      </div>
+
+      <div class="card">
+        <h2 class="section-title">🗡️ 直近の記録</h2>
+        <ul class="history-list" id="history-list"></ul>
+      </div>
+    </div>
+
+    <!-- カレンダー タブ -->
+    <div id="view-calendar" class="view-section">
+      <div class="card">
+        <div class="cal-header">
+          <button class="cal-btn" onclick="changeMonth(-1)">◀</button>
+          <h2 id="cal-month-label" style="font-size: 1.1rem; color: var(--accent-color);"></h2>
+          <button class="cal-btn" onclick="changeMonth(1)">▶</button>
+        </div>
+        <div class="cal-grid" style="margin-bottom: 4px;">
+          <div class="cal-day-header">日</div><div class="cal-day-header">月</div><div class="cal-day-header">火</div>
+          <div class="cal-day-header">水</div><div class="cal-day-header">木</div><div class="cal-day-header">金</div><div class="cal-day-header">土</div>
+        </div>
+        <div class="cal-grid" id="cal-body"></div>
+      </div>
+    </div>
+
+    <!-- 実績 タブ -->
+    <div id="view-achievements" class="view-section">
+      <div class="card">
+        <h2 class="section-title">🏆 称号一覧 <span id="achi-count">0 / 0</span></h2>
+        <div class="achi-list" id="achi-list"></div>
+      </div>
+    </div>
+  </div>
+
+  <nav class="bottom-nav">
+    <div class="nav-item active" onclick="switchTab('home', this)">
+      <span class="nav-icon">🗡️</span><span>記録</span>
+    </div>
+    <div class="nav-item" onclick="switchTab('calendar', this)">
+      <span class="nav-icon">📅</span><span>暦</span>
+    </div>
+    <div class="nav-item" onclick="switchTab('achievements', this)">
+      <span class="nav-icon">🏆</span><span>称号</span>
+    </div>
+  </nav>
+
   <script>
-    // ※これまでのJavaScriptも基本はそのままですが、AI呼び出し部分だけ以下のように書き換えます※
-    
-    // ----- AI読取ボタンの処理（ここから） -----
+    const CATEGORIES = {
+      expense: ["🍖 食費", "🧴 日用品", "🎮 娯楽費", "🚃 交通費", "📦 その他"],
+      income: ["💰 給与", "🎁 臨時収入", "🗡️ クエスト報酬", "📦 その他"]
+    };
+
+    let currentType = "expense";
+    let selectedBase64 = null;
+    let selectedMimeType = null;
+    let currentCalDate = new Date();
+
+    function loadData() {
+      const saved = localStorage.getItem('recequest_data_v2');
+      return saved ? JSON.parse(saved) : { history: [] };
+    }
+
+    function saveData(historyArray) {
+      let totalExp = 0; let totalGold = 0;
+      historyArray.forEach(item => {
+        totalExp += item.exp;
+        if (item.type === 'income') totalGold += item.amount;
+        else totalGold -= item.amount;
+      });
+      const data = { level: Math.floor(totalExp / 100) + 1, exp: totalExp % 100, gold: totalGold, history: historyArray };
+      localStorage.setItem('recequest_data_v2', JSON.stringify(data));
+      return data;
+    }
+
+    function switchTab(tabId, element) {
+      document.querySelectorAll('.view-section').forEach(el => el.classList.remove('active'));
+      document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+      document.getElementById('view-' + tabId).classList.add('active');
+      element.classList.add('active');
+      renderUI();
+    }
+
+    function updateCategoryDropdown() {
+      const select = document.getElementById('category');
+      select.innerHTML = '';
+      CATEGORIES[currentType].forEach(cat => {
+        const opt = document.createElement('option');
+        opt.value = cat; opt.textContent = cat;
+        select.appendChild(opt);
+      });
+    }
+
+    document.getElementById('btn-type-expense').addEventListener('click', () => {
+      currentType = 'expense';
+      document.getElementById('btn-type-expense').className = 'type-btn active-expense';
+      document.getElementById('btn-type-income').className = 'type-btn';
+      updateCategoryDropdown();
+    });
+    document.getElementById('btn-type-income').addEventListener('click', () => {
+      currentType = 'income';
+      document.getElementById('btn-type-income').className = 'type-btn active-income';
+      document.getElementById('btn-type-expense').className = 'type-btn';
+      updateCategoryDropdown();
+    });
+
+    const cameraInput = document.getElementById('camera-input');
+    const preview = document.getElementById('preview');
+    const uploadLabel = document.getElementById('upload-label');
+
+    document.getElementById('drop-area').addEventListener('click', () => cameraInput.click());
+    cameraInput.addEventListener('change', (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+      selectedMimeType = file.type;
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        preview.src = event.target.result;
+        preview.style.display = 'block';
+        uploadLabel.style.display = 'none';
+        selectedBase64 = event.target.result.split(',')[1];
+      };
+      reader.readAsDataURL(file);
+    });
+
+    // 💡 AI通信部分をVercel用に書き換え（fetchを使用）
     document.getElementById('ai-btn').addEventListener('click', async () => {
       if (!selectedBase64) return alert('レシート画像を選択してください。');
       const aiBtn = document.getElementById('ai-btn');
@@ -23,7 +253,6 @@
       aiBtn.disabled = true; loadingMsg.style.display = 'block';
 
       try {
-        // GASの代わりにVercelの裏側(API)にデータを送る
         const response = await fetch('/api/analyze', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -35,28 +264,4 @@
 
         if (!response.ok) throw new Error(resultText);
 
-        // JSONを抽出して処理
-        let cleanText = resultText.replace(/```json/gi, '').replace(/```/g, '').trim();
-        const match = cleanText.match(/\{[\s\S]*\}/);
-        if (match) {
-          const res = JSON.parse(match[0]);
-          if (res.error) throw new Error(res.error);
-          if (res.total_amount) {
-            document.getElementById('amount').value = res.total_amount;
-          } else {
-            throw new Error("金額データが見つかりませんでした");
-          }
-        } else {
-          throw new Error("JSON形式でデータが返されませんでした");
-        }
-      } catch (err) {
-        aiBtn.disabled = false; loadingMsg.style.display = 'none';
-        alert('解析エラー: ' + err.message);
-      }
-    });
-    // ----- AI読取ボタンの処理（ここまで） -----
-
-    // 他の関数(loadData, saveData, renderUIなど)はそのまま貼り付けてください
-  </script>
-</body>
-</html>
+        let cleanText = resultText.replace(/```json/gi, '').replace(/
