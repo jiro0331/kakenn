@@ -264,4 +264,173 @@
 
         if (!response.ok) throw new Error(resultText);
 
-        let cleanText = resultText.replace(/```json/gi, '').replace(/
+        let cleanText = resultText.replace(/```json/gi, '').replace(/```/g, '').trim();
+        const match = cleanText.match(/\{[\s\S]*\}/);
+        if (match) {
+          const res = JSON.parse(match[0]);
+          if (res.error) throw new Error(res.error);
+          if (res.total_amount) {
+            document.getElementById('amount').value = res.total_amount;
+          } else {
+            throw new Error("金額データが見つかりませんでした");
+          }
+        } else {
+          throw new Error("JSON形式でデータが返されませんでした");
+        }
+      } catch (err) {
+        aiBtn.disabled = false; loadingMsg.style.display = 'none';
+        alert('解析エラー: ' + err.message);
+      }
+    });
+
+    window.deleteRecord = function(id) {
+      if(!confirm("この記録を取り消しますか？")) return;
+      const data = loadData();
+      saveData(data.history.filter(item => item.id !== id));
+      renderUI();
+    };
+
+    document.getElementById('record-form').addEventListener('submit', (e) => {
+      e.preventDefault();
+      const amount = parseInt(document.getElementById('amount').value, 10);
+      if (isNaN(amount) || amount <= 0) return;
+
+      const data = loadData();
+      const now = new Date();
+      data.history.push({
+        id: Date.now(), type: currentType,
+        date: `${now.getFullYear()}/${now.getMonth() + 1}/${now.getDate()}`,
+        category: document.getElementById('category').value,
+        amount: amount, exp: 50
+      });
+
+      saveData(data.history);
+      document.getElementById('amount').value = '';
+      preview.style.display = 'none'; uploadLabel.style.display = 'block';
+      selectedBase64 = null; cameraInput.value = '';
+      renderUI();
+    });
+
+    function changeMonth(diff) {
+      currentCalDate.setMonth(currentCalDate.getMonth() + diff);
+      renderCalendar();
+    }
+
+    function renderCalendar() {
+      const year = currentCalDate.getFullYear();
+      const month = currentCalDate.getMonth();
+      document.getElementById('cal-month-label').textContent = `${year}年${month + 1}月`;
+
+      const firstDay = new Date(year, month, 1).getDay();
+      const lastDate = new Date(year, month + 1, 0).getDate();
+      const calcData = saveData(loadData().history);
+      let html = '';
+
+      for(let i = 0; i < firstDay; i++) { html += `<div class="cal-cell" style="background:transparent; border:none;"></div>`; }
+      
+      for(let d = 1; d <= lastDate; d++) {
+        const targetDateStr = `${year}/${month + 1}/${d}`;
+        let dayExpense = 0; let dayIncome = 0;
+        
+        calcData.history.filter(h => h.date === targetDateStr).forEach(h => {
+          if(h.type === 'expense') dayExpense += h.amount;
+          else dayIncome += h.amount;
+        });
+
+        let amountHtml = '';
+        if(dayExpense > 0) amountHtml += `<div class="cal-amount amount-exp">-${dayExpense.toLocaleString()}</div>`;
+        if(dayIncome > 0) amountHtml += `<div class="cal-amount amount-inc">+${dayIncome.toLocaleString()}</div>`;
+
+        html += `<div class="cal-cell"><div class="cal-date">${d}</div>${amountHtml}</div>`;
+      }
+      document.getElementById('cal-body').innerHTML = html;
+    }
+
+    function renderAchievements(calcData) {
+      const achievements = [
+        { id: 'first', icon: '🐣', name: '冒険のはじまり', desc: '初めて記録をつける', check: d => d.history.length >= 1 },
+        { id: 'lv5', icon: '⚔️', name: '見習い卒業', desc: 'レベル5に到達する', check: d => d.level >= 5 },
+        { id: 'lv10', icon: '🛡️', name: '一人前の勇者', desc: 'レベル10に到達する', check: d => d.level >= 10 },
+        { id: 'veteran', icon: '🔥', name: '歴戦の討伐者', desc: '支出を10回記録する', check: d => d.history.filter(h => h.type === 'expense').length >= 10 },
+        { id: 'rich', icon: '👑', name: '成金', desc: '所持金が10,000Gを超える', check: d => d.gold >= 10000 },
+        { id: 'glutton', icon: '🍖', name: '腹ペコ戦士', desc: '食費を10回記録する', check: d => d.history.filter(h => h.category.includes('食費')).length >= 10 },
+        { id: 'traveler', icon: '👟', name: '風の旅人', desc: '交通費を10回記録する', check: d => d.history.filter(h => h.category.includes('交通費')).length >= 10 },
+        { id: 'reward', icon: '💰', name: '賞金稼ぎ', desc: '収入を5回記録する', check: d => d.history.filter(h => h.type === 'income').length >= 5 },
+        { id: 'lucky7', icon: '🎰', name: '奇跡の生還', desc: '隠し: 777Gの記録をつける', isHidden: true, check: d => d.history.some(h => h.amount === 777) },
+        { id: 'broke', icon: '💀', name: '圧倒的借金', desc: '隠し: 所持金がマイナスになる', isHidden: true, check: d => d.gold < 0 },
+        { id: 'whale', icon: '💸', name: '娯楽の魔王', desc: '隠し: 娯楽費だけで累計10,000G使う', isHidden: true, check: d => d.history.filter(h => h.category.includes('娯楽費')).reduce((sum, h) => sum + h.amount, 0) >= 10000 },
+        { id: 'god', icon: '👼', name: '神の域', desc: '隠し: レベル50に到達する', isHidden: true, check: d => d.level >= 50 }
+      ];
+
+      const achiList = document.getElementById('achi-list');
+      achiList.innerHTML = '';
+      
+      let unlockedCount = 0;
+
+      achievements.forEach(a => {
+        const isUnlocked = a.check(calcData);
+        if (isUnlocked) unlockedCount++;
+        
+        let displayIcon = a.icon;
+        let displayName = a.name;
+        let displayDesc = a.desc;
+        let hiddenClass = '';
+        
+        if (a.isHidden && !isUnlocked) {
+          displayIcon = '❓';
+          displayName = '???';
+          displayDesc = '条件を満たすと解放される隠し実績';
+          hiddenClass = 'hidden-locked';
+        }
+
+        achiList.innerHTML += `
+          <div class="achi-item ${isUnlocked ? '' : 'locked'} ${hiddenClass}">
+            <div class="achi-icon">${displayIcon}</div>
+            <div class="achi-info">
+              <h3>${displayName} ${isUnlocked ? '✨' : ''}</h3>
+              <p>${displayDesc}</p>
+            </div>
+          </div>
+        `;
+      });
+      document.getElementById('achi-count').textContent = `${unlockedCount} / ${achievements.length}`;
+    }
+
+    function renderUI() {
+      const calcData = saveData(loadData().history);
+
+      document.getElementById('level-display').textContent = `Lv. ${calcData.level}`;
+      document.getElementById('exp-text').textContent = `EXP: ${calcData.exp} / 100`;
+      document.getElementById('gold-display').textContent = `💰 ${calcData.gold.toLocaleString()} G`;
+      document.getElementById('exp-bar').style.width = `${calcData.exp}%`;
+
+      const list = document.getElementById('history-list');
+      list.innerHTML = '';
+      if (calcData.history.length === 0) {
+        list.innerHTML = '<li class="empty-msg">記録がありません</li>';
+      } else {
+        calcData.history.slice().reverse().slice(0, 15).forEach(item => {
+          const sign = item.type === 'income' ? '+' : '-';
+          list.innerHTML += `
+            <li class="history-item ${item.type}">
+              <div>
+                <div style="font-size:0.75rem; color: var(--sub-text);">${item.date} | ${item.category}</div>
+                <div style="font-weight:bold;">${sign}¥${item.amount.toLocaleString()}</div>
+              </div>
+              <div style="display: flex; align-items: center;">
+                <div style="color: var(--success-color); font-weight:bold; font-size:0.85rem;">+${item.exp} EXP</div>
+                <button type="button" class="btn-delete" onclick="deleteRecord(${item.id})">取消</button>
+              </div>
+            </li>
+          `;
+        });
+      }
+      renderCalendar();
+      renderAchievements(calcData);
+    }
+
+    updateCategoryDropdown();
+    renderUI();
+  </script>
+</body>
+</html>
