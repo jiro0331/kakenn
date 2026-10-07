@@ -6,7 +6,8 @@ export default async function handler(req, res) {
   const { image, mimeType } = req.body;
   const apiKey = process.env.GEMINI_API_KEY; 
 
-  const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
+  // 確実に動作する「gemini-1.5-flash-latest」モデルに変更
+  const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${apiKey}`;
   const prompt = `
     このレシートの画像から「合計金額」を読み取ってください。
     結果は必ず以下のJSON形式のみで出力してください。
