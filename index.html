@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>レセクエスト</title>
   <style>
+    /* CSS変数の定義：ダークテーマを基調とし、アクセントカラーを設定 */
     :root {
       --bg-color: #121214; --card-bg: #1e1e24; --accent-color: #ffd700;
       --text-color: #f0f0f5; --sub-text: #a0a0b0; --border-color: #2e2e38;
@@ -12,73 +13,44 @@
     }
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: sans-serif; }
     
+    /* 基本レイアウト：中央寄せでスマートフォン向けに最適化 */
     body { background-color: var(--bg-color); color: var(--text-color); display: flex; justify-content: center; padding: 16px; padding-bottom: 80px; }
     .app-container { width: 100%; max-width: 480px; display: flex; flex-direction: column; gap: 16px; }
     
-    header { text-align: center; padding: 12px; background-color: var(--card-bg); border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.5); }
-    h1 { font-size: 20px; font-weight: bold; color: var(--accent-color); }
-    
-    .status-card { background-color: var(--card-bg); border-radius: 12px; padding: 16px; border: 1px solid var(--border-color); display: flex; align-items: center; gap: 16px; }
-    .avatar-area { width: 64px; height: 64px; background-color: var(--border-color); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 32px; flex-shrink: 0; }
-    .status-info { flex-grow: 1; }
-    .status-info h2 { font-size: 16px; margin-bottom: 4px; }
-    .exp-bar-bg { background-color: var(--bg-color); border-radius: 8px; height: 12px; overflow: hidden; margin-top: 8px; border: 1px solid var(--border-color); }
-    .exp-bar-fill { background-color: var(--accent-color); height: 100%; width: 50%; transition: width 0.3s; }
-    
-    .balance-card { background-color: var(--card-bg); border-radius: 12px; padding: 20px; border: 1px solid var(--border-color); text-align: center; }
-    .balance-title { font-size: 14px; color: var(--sub-text); margin-bottom: 8px; }
-    .balance-amount { font-size: 32px; font-weight: bold; margin-bottom: 16px; }
-    .balance-amount span { font-size: 16px; }
-    .actions { display: grid; grid-template-columns: 1fr 1frお疲れ様です！エラーの原因が次々と潰せていて、本当にあと一歩です。
-
-ファイルサイズが大きすぎてエラーになってしまう問題（`Request Entity Too Large`）を防ぐため、**「スマホの写真を自動で小さく圧縮してから裏側に送る機能」**を追加した **`index.html` の完全版（全コード）** を作成しました。
-
-GitHubで `index.html` の編集画面を開き、中身を**以下のコードで「すべて上書き」**して保存（Commit changes）してください！
-
-```html
-<!DOCTYPE html>
-<html lang="ja">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>レセクエスト</title>
-  <style>
-    :root {
-      --bg-color: #121214; --card-bg: #1e1e24; --accent-color: #ffd700;
-      --text-color: #f0f0f5; --sub-text: #a0a0b0; --border-color: #2e2e38;
-      --danger-color: #ff5555; --success-color: #50fa7b; --income-color: #8be9fd;
-    }
-    * { box-sizing: border-box; margin: 0; padding: 0; font-family: sans-serif; }
-    
-    body { background-color: var(--bg-color); color: var(--text-color); display: flex; justify-content: center; padding: 16px; padding-bottom: 80px; }
-    .app-container { width: 100%; max-width: 480px; display: flex; flex-direction: column; gap: 16px; }
-    
+    /* ヘッダーとカード（各セクションの枠組み）のスタイル */
     header { text-align: center; padding: 12px; background-color: var(--card-bg); border-radius: 12px; border: 1px solid var(--border-color); }
     h1 { font-size: 1.5rem; color: var(--accent-color); }
     .card { background-color: var(--card-bg); border-radius: 12px; padding: 16px; border: 1px solid var(--border-color); }
     
+    /* ステータス表示（レベル、EXP、所持金）のスタイル */
     .status-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
     .level-badge { background: linear-gradient(135deg, #e65c00, #F9D423); color: #000; font-weight: bold; padding: 4px 12px; border-radius: 20px; }
     .gold-display { font-size: 1.2rem; font-weight: bold; color: var(--accent-color); margin-bottom: 8px; text-align: right; }
     .exp-bar-container { width: 100%; height: 12px; background-color: #101014; border-radius: 6px; overflow: hidden; }
     .exp-bar-fill { height: 100%; width: 0%; background: linear-gradient(90deg, #00b4db, #0083b0); transition: width 0.4s; }
 
+    /* 支出/収入切り替えボタンのスタイル */
     .type-selector { display: flex; gap: 8px; margin-bottom: 12px; }
     .type-btn { flex: 1; padding: 12px 8px; border: 1px solid var(--border-color); background: #101014; color: var(--sub-text); border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 0.9rem; }
     .type-btn.active-expense { background: var(--danger-color); color: #000; border-color: var(--danger-color); }
     .type-btn.active-income { background: var(--income-color); color: #000; border-color: var(--income-color); }
 
+    /* カメラ・画像選択エリアのスタイル */
     .camera-box { border: 2px dashed var(--border-color); border-radius: 8px; padding: 16px; text-align: center; background: #101014; cursor: pointer; margin-bottom: 12px; }
     .camera-box input { display: none; }
     .preview-img { max-width: 100%; max-height: 150px; border-radius: 8px; display: none; margin: 8px auto; }
+    
+    /* 入力フォーム（カテゴリ、金額）のスタイル */
     .form-group { display: flex; flex-direction: column; gap: 6px; margin-bottom: 12px; }
     input, select { background: #101014; border: 1px solid var(--border-color); color: var(--text-color); padding: 12px; border-radius: 6px; font-size: 1rem; }
     
+    /* ボタン全般のスタイル */
     .btn { background: var(--accent-color); color: #000; border: none; padding: 14px; border-radius: 8px; font-weight: bold; width: 100%; cursor: pointer; font-size: 1rem; }
     .btn-ai { background: linear-gradient(135deg, #8a2be2, #4169e1); color: #fff; margin-bottom: 12px; }
     .btn:disabled { opacity: 0.5; cursor: not-allowed; }
     .loading-msg { display: none; text-align: center; color: var(--accent-color); font-size: 0.85rem; margin-bottom: 8px; }
 
+    /* 直近の記録リストのスタイル */
     .history-list { list-style: none; display: flex; flex-direction: column; gap: 8px; }
     .history-item { display: flex; justify-content: space-between; align-items: center; padding: 10px 12px; background: #101014; border-radius: 6px; }
     .history-item.expense { border-left: 4px solid var(--danger-color); }
@@ -86,15 +58,18 @@ GitHubで `index.html` の編集画面を開き、中身を**以下のコード�
     .empty-msg { text-align: center; color: var(--sub-text); padding: 12px; }
     .btn-delete { background: transparent; border: 1px solid var(--danger-color); color: var(--danger-color); padding: 6px 10px; border-radius: 4px; font-size: 0.75rem; cursor: pointer; margin-left: 8px; }
 
+    /* タブ切り替え用の表示制御 */
     .view-section { display: none; animation: fadeIn 0.3s ease; }
     .view-section.active { display: block; }
     @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 
+    /* 下部ナビゲーションバーのスタイル */
     .bottom-nav { position: fixed; bottom: 0; left: 0; width: 100%; background: var(--card-bg); border-top: 1px solid var(--border-color); display: flex; justify-content: space-around; padding: 10px 0; z-index: 100; box-shadow: 0 -2px 10px rgba(0,0,0,0.5); }
     .nav-item { flex: 1; text-align: center; color: var(--sub-text); font-size: 0.8rem; cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 4px; }
     .nav-item.active { color: var(--accent-color); font-weight: bold; }
     .nav-icon { font-size: 1.5rem; }
 
+    /* カレンダー画面のスタイル */
     .cal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
     .cal-btn { background: #101014; border: 1px solid var(--border-color); color: var(--text-color); padding: 8px 16px; border-radius: 4px; cursor: pointer; }
     .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; text-align: center; }
@@ -105,6 +80,7 @@ GitHubで `index.html` の編集画面を開き、中身を**以下のコード�
     .amount-exp { color: var(--danger-color); }
     .amount-inc { color: var(--income-color); }
 
+    /* 実績画面のスタイル */
     .achi-list { display: flex; flex-direction: column; gap: 10px; }
     .achi-item { display: flex; align-items: center; gap: 12px; background: #101014; padding: 12px; border-radius: 8px; border: 1px solid var(--border-color); transition: 0.3s; }
     .achi-item.locked { opacity: 0.4; filter: grayscale(100%); }
@@ -113,6 +89,7 @@ GitHubで `index.html` の編集画面を開き、中身を**以下のコード�
     .achi-info h3 { font-size: 0.95rem; color: var(--accent-color); margin-bottom: 4px; }
     .achi-info p { font-size: 0.75rem; color: var(--sub-text); }
     
+    /* セクションタイトルのスタイル */
     .section-title { font-size: 1rem; margin-bottom: 12px; display: flex; align-items: center; gap: 8px; }
     .section-title span { font-size: 0.75rem; background: #101014; padding: 2px 8px; border-radius: 12px; border: 1px solid var(--border-color); }
   </style>
@@ -122,6 +99,7 @@ GitHubで `index.html` の編集画面を開き、中身を**以下のコード�
   <div class="app-container">
     <header><h1>⚔️ レセクエスト 🛡️</h1></header>
 
+    <!-- プレイヤーステータス表示部 -->
     <div class="card">
       <div class="status-header">
         <span class="level-badge" id="level-display">Lv. 1</span>
@@ -178,4 +156,388 @@ GitHubで `index.html` の編集画面を開き、中身を**以下のコード�
         </div>
         <div class="cal-grid" style="margin-bottom: 4px;">
           <div class="cal-day-header">日</div><div class="cal-day-header">月</div><div class="cal-day-header">火</div>
-          <div class="cal-day-header">水</div><div class="cal-day-header">木</div><div class="
+          <div class="cal-day-header">水</div><div class="cal-day-header">木</div><div class="cal-day-header">金</div><div class="cal-day-header">土</div>
+        </div>
+        <div class="cal-grid" id="cal-body"></div>
+      </div>
+    </div>
+
+    <!-- 実績 タブ -->
+    <div id="view-achievements" class="view-section">
+      <div class="card">
+        <h2 class="section-title">🏆 称号一覧 <span id="achi-count">0 / 0</span></h2>
+        <div class="achi-list" id="achi-list"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 下部ナビゲーション -->
+  <nav class="bottom-nav">
+    <div class="nav-item active" onclick="switchTab('home', this)">
+      <span class="nav-icon">🗡️</span><span>記録</span>
+    </div>
+    <div class="nav-item" onclick="switchTab('calendar', this)">
+      <span class="nav-icon">📅</span><span>暦</span>
+    </div>
+    <div class="nav-item" onclick="switchTab('achievements', this)">
+      <span class="nav-icon">🏆</span><span>称号</span>
+    </div>
+  </nav>
+
+  <script>
+    // --- 初期設定とデータ定義 ---
+    const CATEGORIES = {
+      expense: ["🍖 食費", "🧴 日用品", "🎮 娯楽費", "🚃 交通費", "📦 その他"],
+      income: ["💰 給与", "🎁 臨時収入", "🗡️ クエスト報酬", "📦 その他"]
+    };
+
+    let currentType = "expense";
+    let selectedFile = null;
+    let selectedMimeType = null;
+    let currentCalDate = new Date();
+
+    // --- データ保存・読み込み処理 ---
+    function loadData() {
+      const saved = localStorage.getItem('recequest_data_v2');
+      return saved ? JSON.parse(saved) : { history: [] };
+    }
+
+    function saveData(historyArray) {
+      let totalExp = 0; let totalGold = 0;
+      historyArray.forEach(item => {
+        totalExp += item.exp;
+        if (item.type === 'income') totalGold += item.amount;
+        else totalGold -= item.amount;
+      });
+      const data = { level: Math.floor(totalExp / 100) + 1, exp: totalExp % 100, gold: totalGold, history: historyArray };
+      localStorage.setItem('recequest_data_v2', JSON.stringify(data));
+      return data;
+    }
+
+    // --- タブ切り替え処理 ---
+    function switchTab(tabId, element) {
+      document.querySelectorAll('.view-section').forEach(el => el.classList.remove('active'));
+      document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+      document.getElementById('view-' + tabId).classList.add('active');
+      element.classList.add('active');
+      renderUI();
+    }
+
+    // --- UI更新処理（カテゴリドロップダウン） ---
+    function updateCategoryDropdown() {
+      const select = document.getElementById('category');
+      select.innerHTML = '';
+      CATEGORIES[currentType].forEach(cat => {
+        const opt = document.createElement('option');
+        opt.value = cat; opt.textContent = cat;
+        select.appendChild(opt);
+      });
+    }
+
+    // --- 支出/収入切り替えイベント ---
+    document.getElementById('btn-type-expense').addEventListener('click', () => {
+      currentType = 'expense';
+      document.getElementById('btn-type-expense').className = 'type-btn active-expense';
+      document.getElementById('btn-type-income').className = 'type-btn';
+      updateCategoryDropdown();
+    });
+    document.getElementById('btn-type-income').addEventListener('click', () => {
+      currentType = 'income';
+      document.getElementById('btn-type-income').className = 'type-btn active-income';
+      document.getElementById('btn-type-expense').className = 'type-btn';
+      updateCategoryDropdown();
+    });
+
+    // --- 画像選択とプレビュー処理 ---
+    const cameraInput = document.getElementById('camera-input');
+    const preview = document.getElementById('preview');
+    const uploadLabel = document.getElementById('upload-label');
+
+    document.getElementById('drop-area').addEventListener('click', () => cameraInput.click());
+    
+    cameraInput.addEventListener('change', (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+      selectedFile = file;
+      selectedMimeType = file.type;
+      
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        preview.src = event.target.result;
+        preview.style.display = 'block';
+        uploadLabel.style.display = 'none';
+      };
+      reader.readAsDataURL(file);
+    });
+
+    // --- ★ 追加・修正：画像圧縮処理 ---
+    function compressImage(file, maxWidth = 800, quality = 0.6) {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.readAsDataURL(file);
+        reader.onload = (e) => {
+          const img = new Image();
+          img.src = e.target.result;
+          img.onload = () => {
+            let width = img.width;
+            let height = img.height;
+
+            if (width > height) {
+              if (width > maxWidth) {
+                height = Math.round((height * maxWidth) / width);
+                width = maxWidth;
+              }
+            } else {
+              if (height > maxWidth) {
+                width = Math.round((width * maxWidth) / height);
+                height = maxWidth;
+              }
+            }
+
+            const canvas = document.createElement('canvas');
+            canvas.width = width;
+            canvas.height = height;
+
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(img, 0, 0, width, height);
+
+            const dataUrl = canvas.toDataURL('image/jpeg', quality);
+            const base64Data = dataUrl.split(',')[1];
+            resolve({ base64: base64Data, mimeType: 'image/jpeg' });
+          };
+          img.onerror = (err) => reject(err);
+        };
+        reader.onerror = (err) => reject(err);
+      });
+    }
+
+    // --- ★ 修正：AI読取ボタンの処理（圧縮処理を組み込み） ---
+    document.getElementById('ai-btn').addEventListener('click', async () => {
+      if (!selectedFile) return alert('レシート画像を選択してください。');
+      
+      const aiBtn = document.getElementById('ai-btn');
+      const loadingMsg = document.getElementById('loading-msg');
+      aiBtn.disabled = true; 
+      loadingMsg.style.display = 'block';
+      loadingMsg.textContent = '画像を圧縮中...';
+
+      try {
+        // 画像を圧縮する
+        const compressed = await compressImage(selectedFile);
+        loadingMsg.textContent = '🔮 解析中... (数秒かかります)';
+
+        // APIに圧縮した画像データを送信する
+        const response = await fetch('/api/analyze', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ 
+            image: compressed.base64, 
+            mimeType: compressed.mimeType 
+          })
+        });
+
+        const resultText = await response.text();
+        aiBtn.disabled = false; 
+        loadingMsg.style.display = 'none';
+
+        if (!response.ok) {
+           throw new Error(`サーバーエラー (${response.status}): ${resultText}`);
+        }
+
+        // 余分な文字列を削除してJSONを抽出する
+        let cleanText = resultText.replace(/```json/gi, '').replace(/```/g, '').trim();
+        const match = cleanText.match(/\{[\s\S]*\}/);
+        
+        if (match) {
+          const res = JSON.parse(match[0]);
+          if (res.error) throw new Error(res.error);
+          
+          if (res.total_amount) {
+            document.getElementById('amount').value = res.total_amount;
+            // 支出タブに自動切り替え
+            if(currentType !== 'expense') {
+                document.getElementById('btn-type-expense').click();
+            }
+          } else {
+            throw new Error("金額データが見つかりませんでした");
+          }
+        } else {
+          throw new Error("JSON形式でデータが返されませんでした");
+        }
+      } catch (err) {
+        console.error("AI Error:", err);
+        aiBtn.disabled = false; 
+        loadingMsg.style.display = 'none';
+        alert('解析エラー: ' + err.message + '\nもう一度お試しください。');
+      }
+    });
+
+    // --- 記録削除処理 ---
+    window.deleteRecord = function(id) {
+      if(!confirm("この記録を取り消しますか？")) return;
+      const data = loadData();
+      saveData(data.history.filter(item => item.id !== id));
+      renderUI();
+    };
+
+    // --- 手動登録（フォーム送信）処理 ---
+    document.getElementById('record-form').addEventListener('submit', (e) => {
+      e.preventDefault();
+      const amount = parseInt(document.getElementById('amount').value, 10);
+      if (isNaN(amount) || amount <= 0) return;
+
+      const data = loadData();
+      const now = new Date();
+      data.history.push({
+        id: Date.now(), 
+        type: currentType,
+        date: `${now.getFullYear()}/${now.getMonth() + 1}/${now.getDate()}`,
+        category: document.getElementById('category').value,
+        amount: amount, 
+        exp: 50
+      });
+
+      saveData(data.history);
+      
+      // フォームと画像プレビューをリセットする
+      document.getElementById('amount').value = '';
+      preview.style.display = 'none'; 
+      uploadLabel.style.display = 'block';
+      selectedFile = null; 
+      cameraInput.value = '';
+      
+      renderUI();
+    });
+
+    // --- カレンダー関連処理 ---
+    function changeMonth(diff) {
+      currentCalDate.setMonth(currentCalDate.getMonth() + diff);
+      renderCalendar();
+    }
+
+    function renderCalendar() {
+      const year = currentCalDate.getFullYear();
+      const month = currentCalDate.getMonth();
+      document.getElementById('cal-month-label').textContent = `${year}年${month + 1}月`;
+
+      const firstDay = new Date(year, month, 1).getDay();
+      const lastDate = new Date(year, month + 1, 0).getDate();
+      const calcData = loadData();
+      let html = '';
+
+      // 月初の空白マスを埋める
+      for(let i = 0; i < firstDay; i++) { 
+          html += `<div class="cal-cell" style="background:transparent; border:none;"></div>`; 
+      }
+      
+      // 日付マスを生成する
+      for(let d = 1; d <= lastDate; d++) {
+        const targetDateStr = `${year}/${month + 1}/${d}`;
+        let dayExpense = 0; let dayIncome = 0;
+        
+        calcData.history.filter(h => h.date === targetDateStr).forEach(h => {
+          if(h.type === 'expense') dayExpense += h.amount;
+          else dayIncome += h.amount;
+        });
+
+        let amountHtml = '';
+        if(dayExpense > 0) amountHtml += `<div class="cal-amount amount-exp">-${dayExpense.toLocaleString()}</div>`;
+        if(dayIncome > 0) amountHtml += `<div class="cal-amount amount-inc">+${dayIncome.toLocaleString()}</div>`;
+
+        html += `<div class="cal-cell"><div class="cal-date">${d}</div>${amountHtml}</div>`;
+      }
+      document.getElementById('cal-body').innerHTML = html;
+    }
+
+    // --- 実績表示処理 ---
+    function renderAchievements(calcData) {
+      const achievements = [
+        { id: 'first', icon: '🐣', name: '冒険のはじまり', desc: '初めて記録をつける', check: d => d.history.length >= 1 },
+        { id: 'lv5', icon: '⚔️', name: '見習い卒業', desc: 'レベル5に到達する', check: d => d.level >= 5 },
+        { id: 'lv10', icon: '🛡️', name: '一人前の勇者', desc: 'レベル10に到達する', check: d => d.level >= 10 },
+        { id: 'veteran', icon: '🔥', name: '歴戦の討伐者', desc: '支出を10回記録する', check: d => d.history.filter(h => h.type === 'expense').length >= 10 },
+        { id: 'rich', icon: '👑', name: '成金', desc: '所持金が10,000Gを超える', check: d => d.gold >= 10000 },
+        { id: 'glutton', icon: '🍖', name: '腹ペコ戦士', desc: '食費を10回記録する', check: d => d.history.filter(h => h.category.includes('食費')).length >= 10 },
+        { id: 'traveler', icon: '👟', name: '風の旅人', desc: '交通費を10回記録する', check: d => d.history.filter(h => h.category.includes('交通費')).length >= 10 },
+        { id: 'reward', icon: '💰', name: '賞金稼ぎ', desc: '収入を5回記録する', check: d => d.history.filter(h => h.type === 'income').length >= 5 },
+        { id: 'lucky7', icon: '🎰', name: '奇跡の生還', desc: '隠し: 777Gの記録をつける', isHidden: true, check: d => d.history.some(h => h.amount === 777) },
+        { id: 'broke', icon: '💀', name: '圧倒的借金', desc: '隠し: 所持金がマイナスになる', isHidden: true, check: d => d.gold < 0 },
+        { id: 'whale', icon: '💸', name: '娯楽の魔王', desc: '隠し: 娯楽費だけで累計10,000G使う', isHidden: true, check: d => d.history.filter(h => h.category.includes('娯楽費')).reduce((sum, h) => sum + h.amount, 0) >= 10000 },
+        { id: 'god', icon: '👼', name: '神の域', desc: '隠し: レベル50に到達する', isHidden: true, check: d => d.level >= 50 }
+      ];
+
+      const achiList = document.getElementById('achi-list');
+      achiList.innerHTML = '';
+      
+      let unlockedCount = 0;
+
+      achievements.forEach(a => {
+        const isUnlocked = a.check(calcData);
+        if (isUnlocked) unlockedCount++;
+        
+        let displayIcon = a.icon;
+        let displayName = a.name;
+        let displayDesc = a.desc;
+        let hiddenClass = '';
+        
+        if (a.isHidden && !isUnlocked) {
+          displayIcon = '❓';
+          displayName = '???';
+          displayDesc = '条件を満たすと解放される隠し実績';
+          hiddenClass = 'hidden-locked';
+        }
+
+        achiList.innerHTML += `
+          <div class="achi-item ${isUnlocked ? '' : 'locked'} ${hiddenClass}">
+            <div class="achi-icon">${displayIcon}</div>
+            <div class="achi-info">
+              <h3>${displayName} ${isUnlocked ? '✨' : ''}</h3>
+              <p>${displayDesc}</p>
+            </div>
+          </div>
+        `;
+      });
+      document.getElementById('achi-count').textContent = `${unlockedCount} / ${achievements.length}`;
+    }
+
+    // --- 全体のUI更新処理 ---
+    function renderUI() {
+      const calcData = saveData(loadData().history);
+
+      document.getElementById('level-display').textContent = `Lv. ${calcData.level}`;
+      document.getElementById('exp-text').textContent = `EXP: ${calcData.exp} / 100`;
+      document.getElementById('gold-display').textContent = `💰 ${calcData.gold.toLocaleString()} G`;
+      document.getElementById('exp-bar').style.width = `${calcData.exp}%`;
+
+      const list = document.getElementById('history-list');
+      list.innerHTML = '';
+      if (calcData.history.length === 0) {
+        list.innerHTML = '<li class="empty-msg">記録がありません</li>';
+      } else {
+        // 直近15件を表示
+        calcData.history.slice().reverse().slice(0, 15).forEach(item => {
+          const sign = item.type === 'income' ? '+' : '-';
+          list.innerHTML += `
+            <li class="history-item ${item.type}">
+              <div>
+                <div style="font-size:0.75rem; color: var(--sub-text);">${item.date} | ${item.category}</div>
+                <div style="font-weight:bold;">${sign}¥${item.amount.toLocaleString()}</div>
+              </div>
+              <div style="display: flex; align-items: center;">
+                <div style="color: var(--success-color); font-weight:bold; font-size:0.85rem;">+${item.exp} EXP</div>
+                <button type="button" class="btn-delete" onclick="deleteRecord(${item.id})">取消</button>
+              </div>
+            </li>
+          `;
+        });
+      }
+      renderCalendar();
+      renderAchievements(calcData);
+    }
+
+    // --- 初期化処理 ---
+    updateCategoryDropdown();
+    renderUI();
+  </script>
+</body>
+</html>
