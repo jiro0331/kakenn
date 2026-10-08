@@ -11,8 +11,8 @@ export default async function handler(req, res) {
     return res.status(500).json({ error: 'APIキーが設定されていません。Vercelの設定を確認してください。' });
   }
 
-  // 【重要】2026年現在稼働している最新の安定版モデル「gemini-2.5-flash」を使用
-  const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`;
+  // 【重要】エラーメッセージでGoogleから直接指定された最新モデル「gemini-3.8-flash」を使用
+  const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.8-flash:generateContent?key=${apiKey}`;
   
   const prompt = `
     このレシートの画像から「合計金額」を読み取ってください。
