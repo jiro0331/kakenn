@@ -35,4 +35,22 @@ export default async function handler(req, res) {
     });
 
     const data = await response.json();
+    
+    // エラーハンドリング
+    if (!response.ok) {
+      throw new Error(`Google APIエラー: ${data.error?.message || '不明なエラー'}`);
+    }
+
+    if (!data.candidates || data.candidates.length === 0) {
+      throw new Error('AIが回答を生成できませんでした。');
+    }
+
+    const text = data.candidates[0].content.parts[0].text;
+    res.status(200).send(text);
+
+  } catch (error) {
+    console.error("バックエンド処理エラー:", error);
+    res.status(500).json({ error: error.message });
+  }
+}
 
