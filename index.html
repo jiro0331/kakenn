@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>レセクエスト</title>
+  <title>Money Chronicle</title>
   <style>
     :root {
       --bg-color: #121214; --card-bg: #1e1e24; --accent-color: #ffd700;
@@ -30,15 +30,20 @@
 
     .camera-box { border: 2px dashed var(--border-color); border-radius: 8px; padding: 16px; text-align: center; background: #101014; cursor: pointer; margin-bottom: 12px; }
     .camera-box input { display: none; }
-    .preview-img { max-width: 100%; max-height: 150px; border-radius: 8px; display: none; margin: 8px auto; }
+    .preview-container { display: flex; gap: 8px; overflow-x: auto; margin-top: 8px; padding-bottom: 4px; }
+    .preview-img { max-width: 100px; max-height: 100px; border-radius: 8px; object-fit: cover; border: 1px solid var(--border-color); }
     
     .form-group { display: flex; flex-direction: column; gap: 6px; margin-bottom: 12px; }
-    input, select { background: #101014; border: 1px solid var(--border-color); color: var(--text-color); padding: 12px; border-radius: 6px; font-size: 1rem; }
+    input, select { background: #101014; border: 1px solid var(--border-color); color: var(--text-color); padding: 12px; border-radius: 6px; font-size: 1rem; width: 100%; }
     
     .btn { background: var(--accent-color); color: #000; border: none; padding: 14px; border-radius: 8px; font-weight: bold; width: 100%; cursor: pointer; font-size: 1rem; }
     .btn-ai { background: linear-gradient(135deg, #8a2be2, #4169e1); color: #fff; margin-bottom: 12px; }
     .btn:disabled { opacity: 0.5; cursor: not-allowed; }
-    .loading-msg { display: none; text-align: center; color: var(--accent-color); font-size: 0.85rem; margin-bottom: 8px; }
+    .loading-msg { display: none; text-align: center; color: var(--accent-color); font-size: 0.85rem; margin-bottom: 8px; font-weight: bold; }
+
+    .pending-container { display: none; background: #1a1a20; padding: 12px; border-radius: 8px; border: 1px solid var(--border-color); margin-bottom: 12px; }
+    .pending-item { background: #101014; padding: 12px; border-radius: 6px; margin-bottom: 8px; border: 1px solid #333; position: relative; }
+    .pending-badge { position: absolute; top: -8px; left: -8px; background: var(--accent-color); color: #000; font-size: 0.7rem; font-weight: bold; padding: 2px 8px; border-radius: 12px; }
 
     .history-list { list-style: none; display: flex; flex-direction: column; gap: 8px; }
     .history-item { display: flex; justify-content: space-between; align-items: center; padding: 10px 12px; background: #101014; border-radius: 6px; }
@@ -94,28 +99,37 @@
 
     <div id="view-home" class="view-section active">
       <div class="card" style="margin-bottom: 16px;">
-        <h2 class="section-title">📜 クエスト報告</h2>
+        <h2 class="section-title">📜 クエスト報告 (複数選択可)</h2>
         <div class="type-selector">
           <button type="button" class="type-btn active-expense" id="btn-type-expense">⚔ 支出 (討伐)</button>
           <button type="button" class="type-btn" id="btn-type-income">💰 収入 (報酬)</button>
         </div>
 
         <div class="camera-box" id="drop-area">
-          <span id="upload-label">📷 レシートを撮影 / 画像選択</span>
-          <img id="preview" class="preview-img">
-          <input type="file" id="camera-input" accept="image/*" capture="environment">
+          <span id="upload-label">📷 レシートを撮影 / 複数選択</span>
+          <div id="preview-container" class="preview-container"></div>
+          <!-- ★ multiple属性を追加し、複数ファイルを選択可能に -->
+          <input type="file" id="camera-input" accept="image/*" multiple>
         </div>
         
-        <button type="button" class="btn btn-ai" id="ai-btn">🤖 AI読取 (オートバトル)</button>
+        <button type="button" class="btn btn-ai" id="ai-btn">🤖 AI連続読取 (オートバトル)</button>
         <div class="loading-msg" id="loading-msg">🔮 解析中... (数秒かかります)</div>
 
+        <!-- ★ AI一括処理後の確認・修正エリア -->
+        <div id="pending-container" class="pending-container">
+          <h3 style="font-size: 0.9rem; margin-bottom: 10px; color: var(--accent-color);">📋 解析完了 (確認・修正)</h3>
+          <div id="pending-list"></div>
+          <button type="button" class="btn" id="batch-submit-btn" style="background: var(--success-color);">一括記録してEXP獲得！</button>
+        </div>
+
+        <!-- 通常の手動記録フォーム -->
         <form id="record-form">
           <div class="form-group">
             <label style="font-size: 0.85rem; color: var(--sub-text);">カテゴリ</label>
             <select id="category" required></select>
           </div>
           <div class="form-group">
-            <label style="font-size: 0.85rem; color: var(--sub-text);">金額 (円 / G) ※修正可能</label>
+            <label style="font-size: 0.85rem; color: var(--sub-text);">金額 (円 / G)</label>
             <input type="number" id="amount" placeholder="例: 1000" min="1" required>
           </div>
           <button type="submit" class="btn" id="submit-btn">クエスト達成！ (EXPを獲得)</button>
@@ -170,8 +184,7 @@
     };
 
     let currentType = "expense";
-    let selectedFile = null;
-    let selectedMimeType = null;
+    let selectedFiles = []; // ★ 複数ファイル保持用
     let currentCalDate = new Date();
 
     function loadData() {
@@ -207,6 +220,17 @@
         opt.value = cat; opt.textContent = cat;
         select.appendChild(opt);
       });
+      
+      // ★ 承認待ちリストのカテゴリも連動して切り替え
+      document.querySelectorAll('.pending-category').forEach(sel => {
+        const currentVal = sel.value;
+        sel.innerHTML = '';
+        CATEGORIES[currentType].forEach(cat => {
+          const opt = document.createElement('option');
+          opt.value = cat; opt.textContent = cat;
+          sel.appendChild(opt);
+        });
+      });
     }
 
     document.getElementById('btn-type-expense').addEventListener('click', () => {
@@ -223,24 +247,31 @@
     });
 
     const cameraInput = document.getElementById('camera-input');
-    const preview = document.getElementById('preview');
+    const previewContainer = document.getElementById('preview-container');
     const uploadLabel = document.getElementById('upload-label');
 
-    document.getElementById('drop-area').addEventListener('click', () => cameraInput.click());
+    document.getElementById('drop-area').addEventListener('click', (e) => {
+      if(e.target !== cameraInput) cameraInput.click();
+    });
     
+    // ★ 複数画像のプレビュー表示
     cameraInput.addEventListener('change', (e) => {
-      const file = e.target.files[0];
-      if (!file) return;
-      selectedFile = file;
-      selectedMimeType = file.type;
+      selectedFiles = Array.from(e.target.files);
+      if (selectedFiles.length === 0) return;
       
-      const reader = new FileReader();
-      reader.onload = (event) => {
-        preview.src = event.target.result;
-        preview.style.display = 'block';
-        uploadLabel.style.display = 'none';
-      };
-      reader.readAsDataURL(file);
+      uploadLabel.style.display = 'none';
+      previewContainer.innerHTML = '';
+      
+      selectedFiles.forEach(file => {
+        const reader = new FileReader();
+        reader.onload = (event) => {
+          const img = document.createElement('img');
+          img.src = event.target.result;
+          img.className = 'preview-img';
+          previewContainer.appendChild(img);
+        };
+        reader.readAsDataURL(file);
+      });
     });
 
     function compressImage(file, maxWidth = 800, quality = 0.6) {
@@ -251,27 +282,17 @@
           const img = new Image();
           img.src = e.target.result;
           img.onload = () => {
-            let width = img.width;
-            let height = img.height;
+            let width = img.width; let height = img.height;
             if (width > height) {
-              if (width > maxWidth) {
-                height = Math.round((height * maxWidth) / width);
-                width = maxWidth;
-              }
+              if (width > maxWidth) { height = Math.round((height * maxWidth) / width); width = maxWidth; }
             } else {
-              if (height > maxWidth) {
-                width = Math.round((width * maxWidth) / height);
-                height = maxWidth;
-              }
+              if (height > maxWidth) { width = Math.round((width * maxWidth) / height); height = maxWidth; }
             }
             const canvas = document.createElement('canvas');
-            canvas.width = width;
-            canvas.height = height;
+            canvas.width = width; canvas.height = height;
             const ctx = canvas.getContext('2d');
             ctx.drawImage(img, 0, 0, width, height);
-            const dataUrl = canvas.toDataURL('image/jpeg', quality);
-            const base64Data = dataUrl.split(',')[1];
-            resolve({ base64: base64Data, mimeType: 'image/jpeg' });
+            resolve({ base64: canvas.toDataURL('image/jpeg', quality).split(',')[1], mimeType: 'image/jpeg' });
           };
           img.onerror = (err) => reject(err);
         };
@@ -279,60 +300,148 @@
       });
     }
 
+    // ★ 連続AI読み取りロジック（バックエンドへのリクエストは以前のまま、ループ処理を追加）
     document.getElementById('ai-btn').addEventListener('click', async () => {
-      if (!selectedFile) return alert('レシート画像を選択してください。');
+      if (selectedFiles.length === 0) return alert('レシート画像を選択してください。');
       
       const aiBtn = document.getElementById('ai-btn');
       const loadingMsg = document.getElementById('loading-msg');
+      const pendingContainer = document.getElementById('pending-container');
+      const pendingList = document.getElementById('pending-list');
+      const recordForm = document.getElementById('record-form');
+
       aiBtn.disabled = true; 
       loadingMsg.style.display = 'block';
-      loadingMsg.textContent = '画像を圧縮中...';
+      pendingContainer.style.display = 'none';
+      pendingList.innerHTML = '';
+      
+      let successCount = 0;
 
-      try {
-        const compressed = await compressImage(selectedFile);
-        loadingMsg.textContent = '🔮 解析中... (数秒かかります)';
+      for (let i = 0; i < selectedFiles.length; i++) {
+        loadingMsg.textContent = `🔮 連続解析中... (${i + 1}/${selectedFiles.length}枚目)`;
+        try {
+          const compressed = await compressImage(selectedFiles[i]);
+          const response = await fetch('/api/analyze', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ image: compressed.base64, mimeType: compressed.mimeType })
+          });
 
-        const response = await fetch('/api/analyze', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ 
-            image: compressed.base64, 
-            mimeType: compressed.mimeType 
-          })
-        });
+          const resultText = await response.text();
+          if (!response.ok) throw new Error(resultText);
 
-        const resultText = await response.text();
-        aiBtn.disabled = false; 
-        loadingMsg.style.display = 'none';
-
-        if (!response.ok) {
-           throw new Error(`サーバーエラー (${response.status}): ${resultText}`);
-        }
-
-        let cleanText = resultText.replace(/```json/gi, '').replace(/```/g, '').trim();
-        const match = cleanText.match(/\{[\s\S]*\}/);
-        
-        if (match) {
-          const res = JSON.parse(match[0]);
-          if (res.error) throw new Error(res.error);
+          let cleanText = resultText.replace(/```json/gi, '').replace(/```/g, '').trim();
+          const match = cleanText.match(/\{[\s\S]*\}/);
           
-          if (res.total_amount) {
-            document.getElementById('amount').value = res.total_amount;
-            if(currentType !== 'expense') {
-                document.getElementById('btn-type-expense').click();
+          if (match) {
+            const res = JSON.parse(match[0]);
+            if (res.total_amount) {
+              // 解析成功時はリストに追加
+              addPendingItem(res.total_amount, i + 1);
+              successCount++;
             }
-          } else {
-            throw new Error("金額データが見つかりませんでした");
           }
-        } else {
-          throw new Error("JSON形式でデータが返されませんでした");
+        } catch (err) {
+          console.error(`File ${i+1} AI Error:`, err);
         }
-      } catch (err) {
-        console.error("AI Error:", err);
-        aiBtn.disabled = false; 
-        loadingMsg.style.display = 'none';
-        alert('解析エラー: ' + err.message + '\nもう一度お試しください。');
       }
+
+      aiBtn.disabled = false; 
+      loadingMsg.style.display = 'none';
+
+      if (successCount > 0) {
+        pendingContainer.style.display = 'block';
+        recordForm.style.display = 'none'; // 手動フォームを隠す
+        if(currentType !== 'expense') document.getElementById('btn-type-expense').click();
+      } else {
+        alert('すべての読み取りに失敗しました。画像が不鮮明か、サーバーエラーの可能性があります。');
+      }
+    });
+
+    // ★ 承認待ちUIの生成
+    function addPendingItem(amount, index) {
+      const div = document.createElement('div');
+      div.className = 'pending-item';
+      
+      let optionsHTML = '';
+      CATEGORIES[currentType].forEach(cat => { optionsHTML += `<option value="${cat}">${cat}</option>`; });
+      
+      div.innerHTML = `
+        <span class="pending-badge">読取 ${index}</span>
+        <div style="display: flex; gap: 8px; margin-top: 8px;">
+          <select class="pending-category" style="flex: 1;">${optionsHTML}</select>
+          <input type="number" class="pending-amount" value="${amount}" min="1" style="flex: 1;">
+        </div>
+      `;
+      document.getElementById('pending-list').appendChild(div);
+    }
+
+    // UIを初期状態に戻す
+    function resetForm() {
+      document.getElementById('amount').value = '';
+      previewContainer.innerHTML = ''; 
+      uploadLabel.style.display = 'block';
+      selectedFiles = []; 
+      cameraInput.value = '';
+      document.getElementById('pending-container').style.display = 'none';
+      document.getElementById('pending-list').innerHTML = '';
+      document.getElementById('record-form').style.display = 'block';
+    }
+
+    // ★ 承認待ちリストの一括記録処理
+    document.getElementById('batch-submit-btn').addEventListener('click', () => {
+      const items = document.querySelectorAll('.pending-item');
+      const data = loadData();
+      const now = new Date();
+      const dateStr = `${now.getFullYear()}/${now.getMonth() + 1}/${now.getDate()}`;
+      
+      let totalGainedExp = 0;
+
+      items.forEach((item, index) => {
+        const amount = parseInt(item.querySelector('.pending-amount').value, 10);
+        const category = item.querySelector('.pending-category').value;
+        if (isNaN(amount) || amount <= 0) return;
+
+        // ★ 完全維持：金額の2% ＋ 13〜54のランダムな乱数を付与
+        const baseExp = Math.max(1, Math.floor(amount * 0.02)); 
+        const randomExp = Math.floor(Math.random() * 42) + 13; 
+        const gainedExp = baseExp + randomExp;
+        totalGainedExp += gainedExp;
+
+        data.history.push({
+          id: Date.now() + index, // 一意にするためindexを加算
+          type: currentType, date: dateStr, category: category, amount: amount, exp: gainedExp
+        });
+      });
+
+      saveData(data.history);
+      alert(`${items.length}件のクエストを一括達成しました！\n（獲得: ${totalGainedExp} EXP）`);
+      resetForm();
+      renderUI();
+    });
+
+    // ★ 手動フォームの記録処理（変更なし）
+    document.getElementById('record-form').addEventListener('submit', (e) => {
+      e.preventDefault();
+      const amount = parseInt(document.getElementById('amount').value, 10);
+      if (isNaN(amount) || amount <= 0) return;
+
+      const baseExp = Math.max(1, Math.floor(amount * 0.02)); 
+      const randomExp = Math.floor(Math.random() * 42) + 13; 
+      const gainedExp = baseExp + randomExp;
+
+      const data = loadData();
+      const now = new Date();
+      data.history.push({
+        id: Date.now(), type: currentType,
+        date: `${now.getFullYear()}/${now.getMonth() + 1}/${now.getDate()}`,
+        category: document.getElementById('category').value,
+        amount: amount, exp: gainedExp
+      });
+
+      saveData(data.history);
+      resetForm();
+      renderUI();
     });
 
     window.deleteRecord = function(id) {
@@ -341,39 +450,6 @@
       saveData(data.history.filter(item => item.id !== id));
       renderUI();
     };
-
-    document.getElementById('record-form').addEventListener('submit', (e) => {
-      e.preventDefault();
-      const amount = parseInt(document.getElementById('amount').value, 10);
-      if (isNaN(amount) || amount <= 0) return;
-
-      // ★ 経験値のランダム・キリの悪い計算ロジック
-      // 金額の2% ＋ 13〜54のランダムな乱数を付与
-      const baseExp = Math.max(1, Math.floor(amount * 0.02)); 
-      const randomExp = Math.floor(Math.random() * 42) + 13; 
-      const gainedExp = baseExp + randomExp;
-
-      const data = loadData();
-      const now = new Date();
-      data.history.push({
-        id: Date.now(), 
-        type: currentType,
-        date: `${now.getFullYear()}/${now.getMonth() + 1}/${now.getDate()}`,
-        category: document.getElementById('category').value,
-        amount: amount, 
-        exp: gainedExp
-      });
-
-      saveData(data.history);
-      
-      document.getElementById('amount').value = '';
-      preview.style.display = 'none'; 
-      uploadLabel.style.display = 'block';
-      selectedFile = null; 
-      cameraInput.value = '';
-      
-      renderUI();
-    });
 
     function changeMonth(diff) {
       currentCalDate.setMonth(currentCalDate.getMonth() + diff);
@@ -412,8 +488,8 @@
       document.getElementById('cal-body').innerHTML = html;
     }
 
+    // ★ 実績機能（完全維持）
     function renderAchievements(calcData) {
-      // ★ 実績を大量追加
       const achievements = [
         { id: 'first', icon: '🐣', name: '冒険のはじまり', desc: '初めて記録をつける', check: d => d.history.length >= 1 },
         { id: 'lv5', icon: '⚔️', name: '見習い卒業', desc: 'レベル5に到達する', check: d => d.level >= 5 },
@@ -443,16 +519,10 @@
         const isUnlocked = a.check(calcData);
         if (isUnlocked) unlockedCount++;
         
-        let displayIcon = a.icon;
-        let displayName = a.name;
-        let displayDesc = a.desc;
-        let hiddenClass = '';
+        let displayIcon = a.icon; let displayName = a.name; let displayDesc = a.desc; let hiddenClass = '';
         
         if (a.isHidden && !isUnlocked) {
-          displayIcon = '❓';
-          displayName = '???';
-          displayDesc = '条件を満たすと解放される隠し実績';
-          hiddenClass = 'hidden-locked';
+          displayIcon = '❓'; displayName = '???'; displayDesc = '条件を満たすと解放される隠し実績'; hiddenClass = 'hidden-locked';
         }
 
         achiList.innerHTML += `
