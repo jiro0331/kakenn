@@ -7,13 +7,12 @@ export default async function handler(req, res) {
   const { image, mimeType } = req.body;
   const apiKey = process.env.GEMINI_API_KEY; 
 
-  // 万が一APIキーが読み込めていない場合のエラー
   if (!apiKey) {
     return res.status(500).json({ error: 'APIキーが設定されていません。Vercelの設定を確認してください。' });
   }
 
-  // 【重要】前に成功実績のある安定モデルに完全固定
-  const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-pro-vision:generateContent?key=${apiKey}`;
+  // 【重要】2026年現在稼働している最新の安定版モデル「gemini-2.5-flash」を使用
+  const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`;
   
   const prompt = `
     このレシートの画像から「合計金額」を読み取ってください。
@@ -37,7 +36,7 @@ export default async function handler(req, res) {
 
     const data = await response.json();
     
-    // API側からエラーが返ってきた場合の詳細なハンドリング
+    // エラーハンドリング
     if (!response.ok) {
       throw new Error(`Google APIエラー: ${data.error?.message || '不明なエラー'}`);
     }
