@@ -6,8 +6,8 @@ export default async function handler(req, res) {
   const { image, mimeType } = req.body;
   const apiKey = process.env.GEMINI_API_KEY; 
 
-  // 以前成功していた安定版の画像対応モデル「gemini-pro-vision」を使用
-  const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-pro-vision:generateContent?key=${apiKey}`;
+  // 現在最も安定している推奨モデル
+  const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
   
   const prompt = `
     このレシートの画像から「合計金額」を読み取ってください。
