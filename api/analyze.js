@@ -1,4 +1,5 @@
 export default async function handler(req, res) {
+  // POSTメソッド以外は弾く
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'POSTメソッドのみ許可されています' });
   }
@@ -6,8 +7,13 @@ export default async function handler(req, res) {
   const { image, mimeType } = req.body;
   const apiKey = process.env.GEMINI_API_KEY; 
 
-  // 現在最も安定している推奨モデル
-  const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
+  // 万が一APIキーが読み込めていない場合のエラー
+  if (!apiKey) {
+    return res.status(500).json({ error: 'APIキーが設定されていません。Vercelの設定を確認してください。' });
+  }
+
+  // 【重要】前に成功実績のある安定モデルに完全固定
+  const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-pro-vision:generateContent?key=${apiKey}`;
   
   const prompt = `
     このレシートの画像から「合計金額」を読み取ってください。
@@ -30,13 +36,21 @@ export default async function handler(req, res) {
     });
 
     const data = await response.json();
-    if (!response.ok) throw new Error(data.error?.message || 'API Error');
+    
+    // API側からエラーが返ってきた場合の詳細なハンドリング
+    if (!response.ok) {
+      throw new Error(`Google APIエラー: ${data.error?.message || '不明なエラー'}`);
+    }
+
+    if (!data.candidates || data.candidates.length === 0) {
+      throw new Error('AIが回答を生成できませんでした。');
+    }
 
     const text = data.candidates[0].content.parts[0].text;
     res.status(200).send(text);
 
   } catch (error) {
-    console.error(error);
+    console.error("バックエンド処理エラー:", error);
     res.status(500).json({ error: error.message });
   }
 }
