@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="ja">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -178,6 +179,65 @@
   </nav>
 
   <script>
+    
+const SUPABASE_URL = "https://uncyjfvnqdkddxvyljaa.supabase.co";
+const SUPABASE_PUBLISHABLE_KEY = "sb_publishable_Mp2hWVnTzu5TarN6sjb09w_4HFBVVeE";
+
+const supabaseClient = window.supabase.createClient(
+  SUPABASE_URL,
+  SUPABASE_PUBLISHABLE_KEY
+);
+
+// 匿名ユーザーを取得する。同じブラウザのセッションは再利用する。
+async function initializeAnonymousUser() {
+  const {
+    data: { session },
+    error: sessionError
+  } = await supabaseClient.auth.getSession();
+
+  if (sessionError) throw sessionError;
+
+  if (session?.user) {
+    return session.user;
+  }
+
+  const { data, error } =
+    await supabaseClient.auth.signInAnonymously();
+
+  if (error) throw error;
+  if (!data.user) {
+    throw new Error("匿名ユーザーを取得できません");
+  }
+
+  return data.user;
+}
+
+const anonymousUserReady = initializeAnonymousUser();
+
+// 行動ログを保存する
+async function logActivity(eventType, eventData = {}) {
+  try {
+    const user = await anonymousUserReady;
+
+    const { error } = await supabaseClient
+      .from("activity_logs")
+      .insert({
+        user_id: user.id,
+        event_type: eventType,
+        event_data: eventData
+      });
+
+    if (error) {
+      console.error("行動ログの保存に失敗:", error.message);
+    }
+  } catch (error) {
+    console.error("匿名認証またはログ保存に失敗:", error);
+  }
+}
+
+// アプリを開いたときのログ
+void logActivity("app_open");
+
     const CATEGORIES = {
       expense: ["🍖 食費", "🧴 日用品", "🎮 娯楽費", "🚃 交通費", "📦 その他"],
       income: ["💰 給与", "🎁 臨時収入", "🗡️ クエスト報酬", "📦 その他"]
@@ -204,13 +264,20 @@
       return data;
     }
 
-    function switchTab(tabId, element) {
-      document.querySelectorAll('.view-section').forEach(el => el.classList.remove('active'));
-      document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
-      document.getElementById('view-' + tabId).classList.add('active');
-      element.classList.add('active');
-      renderUI();
-    }
+
+function switchTab(tabId, element) {
+  document.querySelectorAll('.view-section').forEach(el => el.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+  document.getElementById('view-' + tabId).classList.add('active');
+  element.classList.add('active');
+  renderUI();
+
+  // ページ移動を記録
+  void logActivity("page_view", {
+    page: tabId
+  });
+}
+
 
     function updateCategoryDropdown() {
       const select = document.getElementById('category');
@@ -388,61 +455,104 @@
       document.getElementById('record-form').style.display = 'block';
     }
 
-    // ★ 承認待ちリストの一括記録処理
+      // 承認待ちリストの一括記録処理
     document.getElementById('batch-submit-btn').addEventListener('click', () => {
       const items = document.querySelectorAll('.pending-item');
       const data = loadData();
       const now = new Date();
       const dateStr = `${now.getFullYear()}/${now.getMonth() + 1}/${now.getDate()}`;
-      
+
       let totalGainedExp = 0;
+      let addedCount = 0;
 
       items.forEach((item, index) => {
-        const amount = parseInt(item.querySelector('.pending-amount').value, 10);
+        const amount = parseInt(
+          item.querySelector('.pending-amount').value,
+          10
+        );
         const category = item.querySelector('.pending-category').value;
+
+        // 金額が不正な項目は記録しない
         if (isNaN(amount) || amount <= 0) return;
 
-        // ★ 完全維持：金額の2% ＋ 13〜54のランダムな乱数を付与
-        const baseExp = Math.max(1, Math.floor(amount * 0.02)); 
-        const randomExp = Math.floor(Math.random() * 42) + 13; 
+        // 既存のEXP計算を維持
+        const baseExp = Math.max(1, Math.floor(amount * 0.02));
+        const randomExp = Math.floor(Math.random() * 42) + 13;
         const gainedExp = baseExp + randomExp;
+
         totalGainedExp += gainedExp;
 
         data.history.push({
-          id: Date.now() + index, // 一意にするためindexを加算
-          type: currentType, date: dateStr, category: category, amount: amount, exp: gainedExp
+          id: Date.now() + index,
+          type: currentType,
+          date: dateStr,
+          category: category,
+          amount: amount,
+          exp: gainedExp
         });
+
+        // 実際に追加できた件数を数える
+        addedCount++;
       });
 
+      // 既存の家計簿データを保存
       saveData(data.history);
-      alert(`${items.length}件のクエストを一括達成しました！\n（獲得: ${totalGainedExp} EXP）`);
+
+      // 1件以上追加できた場合のみSupabaseに記録
+      if (addedCount > 0) {
+        void logActivity("record_added", {
+          record_type: currentType,
+          count: addedCount,
+          source: "receipt_batch"
+        });
+      }
+
+      alert(
+        `${addedCount}件のクエストを一括達成しました！\n（獲得: ${totalGainedExp} EXP）`
+      );
+
       resetForm();
       renderUI();
     });
 
-    // ★ 手動フォームの記録処理（変更なし）
+   
+    // 手動フォームの記録処理
     document.getElementById('record-form').addEventListener('submit', (e) => {
       e.preventDefault();
+
       const amount = parseInt(document.getElementById('amount').value, 10);
       if (isNaN(amount) || amount <= 0) return;
 
-      const baseExp = Math.max(1, Math.floor(amount * 0.02)); 
-      const randomExp = Math.floor(Math.random() * 42) + 13; 
+      const baseExp = Math.max(1, Math.floor(amount * 0.02));
+      const randomExp = Math.floor(Math.random() * 42) + 13;
       const gainedExp = baseExp + randomExp;
 
       const data = loadData();
       const now = new Date();
+
       data.history.push({
-        id: Date.now(), type: currentType,
+        id: Date.now(),
+        type: currentType,
         date: `${now.getFullYear()}/${now.getMonth() + 1}/${now.getDate()}`,
         category: document.getElementById('category').value,
-        amount: amount, exp: gainedExp
+        amount: amount,
+        exp: gainedExp
       });
 
+      // 既存の家計簿データを保存
       saveData(data.history);
+
+      // Supabaseに記録追加イベントを保存
+      void logActivity("record_added", {
+        record_type: currentType,
+        count: 1,
+        source: "manual"
+      });
+
       resetForm();
       renderUI();
     });
+
 
     window.deleteRecord = function(id) {
       if(!confirm("この記録を取り消しますか？")) return;
