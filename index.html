@@ -24,28 +24,16 @@
     .exp-bar-container { width: 100%; height: 12px; background-color: #101014; border-radius: 6px; overflow: hidden; }
     .exp-bar-fill { height: 100%; width: 0%; background: linear-gradient(90deg, #00b4db, #0083b0); transition: width 0.4s; }
 
-    .type-selector { display: flex; gap: 8px; margin-bottom: 12px; }
+    .type-selector { display: flex; gap: 8px; margin-bottom: 16px; }
     .type-btn { flex: 1; padding: 12px 8px; border: 1px solid var(--border-color); background: #101014; color: var(--sub-text); border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 0.9rem; }
     .type-btn.active-expense { background: var(--danger-color); color: #000; border-color: var(--danger-color); }
     .type-btn.active-income { background: var(--income-color); color: #000; border-color: var(--income-color); }
-
-    .camera-box { border: 2px dashed var(--border-color); border-radius: 8px; padding: 16px; text-align: center; background: #101014; cursor: pointer; margin-bottom: 12px; }
-    .camera-box input { display: none; }
-    .preview-container { display: flex; gap: 8px; overflow-x: auto; margin-top: 8px; padding-bottom: 4px; }
-    .preview-img { max-width: 100px; max-height: 100px; border-radius: 8px; object-fit: cover; border: 1px solid var(--border-color); }
     
-    .form-group { display: flex; flex-direction: column; gap: 6px; margin-bottom: 12px; }
+    .form-group { display: flex; flex-direction: column; gap: 6px; margin-bottom: 16px; }
     input, select { background: #101014; border: 1px solid var(--border-color); color: var(--text-color); padding: 12px; border-radius: 6px; font-size: 1rem; width: 100%; }
     
     .btn { background: var(--accent-color); color: #000; border: none; padding: 14px; border-radius: 8px; font-weight: bold; width: 100%; cursor: pointer; font-size: 1rem; }
-    .btn-ai { background: linear-gradient(135deg, #8a2be2, #4169e1); color: #fff; margin-bottom: 12px; }
-    .btn:disabled { opacity: 0.5; cursor: not-allowed; }
-    .loading-msg { display: none; text-align: center; color: var(--accent-color); font-size: 0.85rem; margin-bottom: 8px; font-weight: bold; }
-
-    .pending-container { display: none; background: #1a1a20; padding: 12px; border-radius: 8px; border: 1px solid var(--border-color); margin-bottom: 12px; }
-    .pending-item { background: #101014; padding: 12px; border-radius: 6px; margin-bottom: 8px; border: 1px solid #333; position: relative; }
-    .pending-badge { position: absolute; top: -8px; left: -8px; background: var(--accent-color); color: #000; font-size: 0.7rem; font-weight: bold; padding: 2px 8px; border-radius: 12px; }
-
+    
     .history-list { list-style: none; display: flex; flex-direction: column; gap: 8px; }
     .history-item { display: flex; justify-content: space-between; align-items: center; padding: 10px 12px; background: #101014; border-radius: 6px; }
     .history-item.expense { border-left: 4px solid var(--danger-color); }
@@ -57,129 +45,4 @@
     .view-section.active { display: block; }
     @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 
-    .bottom-nav { position: fixed; bottom: 0; left: 0; width: 100%; background: var(--card-bg); border-top: 1px solid var(--border-color); display: flex; justify-content: space-around; padding: 10px 0; z-index: 100; box-shadow: 0 -2px 10px rgba(0,0,0,0.5); }
-    .nav-item { flex: 1; text-align: center; color: var(--sub-text); font-size: 0.8rem; cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 4px; }
-    .nav-item.active { color: var(--accent-color); font-weight: bold; }
-    .nav-icon { font-size: 1.5rem; }
-
-    .cal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
-    .cal-btn { background: #101014; border: 1px solid var(--border-color); color: var(--text-color); padding: 8px 16px; border-radius: 4px; cursor: pointer; }
-    .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; text-align: center; }
-    .cal-day-header { font-size: 0.8rem; color: var(--sub-text); margin-bottom: 4px; }
-    .cal-cell { background: #101014; border-radius: 4px; padding: 6px 2px; min-height: 50px; display: flex; flex-direction: column; justify-content: flex-start; border: 1px solid var(--border-color); }
-    .cal-date { font-size: 0.8rem; margin-bottom: 2px; }
-    .cal-amount { font-size: 0.65rem; font-weight: bold; margin-top: auto; }
-    .amount-exp { color: var(--danger-color); }
-    .amount-inc { color: var(--income-color); }
-
-    .achi-list { display: flex; flex-direction: column; gap: 10px; }
-    .achi-item { display: flex; align-items: center; gap: 12px; background: #101014; padding: 12px; border-radius: 8px; border: 1px solid var(--border-color); transition: 0.3s; }
-    .achi-item.locked { opacity: 0.4; filter: grayscale(100%); }
-    .achi-item.hidden-locked .achi-icon { filter: blur(2px); opacity: 0.7; }
-    .achi-icon { font-size: 2rem; background: var(--card-bg); padding: 8px; border-radius: 50%; min-width: 52px; text-align: center; }
-    .achi-info h3 { font-size: 0.95rem; color: var(--accent-color); margin-bottom: 4px; }
-    .achi-info p { font-size: 0.75rem; color: var(--sub-text); }
-    
-    .section-title { font-size: 1rem; margin-bottom: 12px; display: flex; align-items: center; gap: 8px; }
-    .section-title span { font-size: 0.75rem; background: #101014; padding: 2px 8px; border-radius: 12px; border: 1px solid var(--border-color); }
-  </style>
-</head>
-<body>
-
-  <div class="app-container">
-    <header><h1>⚔️ マネクエ 🛡️</h1></header>
-
-    <div class="card">
-      <div class="status-header">
-        <span class="level-badge" id="level-display">Lv. 1</span>
-        <span style="font-size: 0.85rem; color: var(--sub-text);" id="exp-text">EXP: 0 / 100</span>
-      </div>
-      <div class="gold-display" id="gold-display">💰 0 G</div>
-      <div class="exp-bar-container"><div class="exp-bar-fill" id="exp-bar"></div></div>
-    </div>
-
-    <div id="view-home" class="view-section active">
-      <div class="card" style="margin-bottom: 16px;">
-        <h2 class="section-title">📜 クエスト報告</h2>
-        <div class="type-selector">
-          <button type="button" class="type-btn active-expense" id="btn-type-expense">⚔ 支出 (討伐)</button>
-          <button type="button" class="type-btn" id="btn-type-income">💰 収入 (報酬)</button>
-        </div>
-
-        <!-- ★変更箇所: AI関連のカメラとボタンを画面から非表示にしました（機能は保持しています） -->
-        <div class="camera-box" id="drop-area" style="display: none;">
-          <span id="upload-label">📷 レシートを撮影 / 複数選択</span>
-          <div id="preview-container" class="preview-container"></div>
-          <input type="file" id="camera-input" accept="image/*" multiple>
-        </div>
-        
-        <button type="button" class="btn btn-ai" id="ai-btn" style="display: none;">🤖 AI連続読取 (オートバトル)</button>
-        <div class="loading-msg" id="loading-msg" style="display: none;">🔮 解析中... (数秒かかります)</div>
-
-        <div id="pending-container" class="pending-container">
-          <h3 style="font-size: 0.9rem; margin-bottom: 10px; color: var(--accent-color);">📋 解析完了 (確認・修正)</h3>
-          <div id="pending-list"></div>
-          <button type="button" class="btn" id="batch-submit-btn" style="background: var(--success-color);">一括記録してEXP獲得！</button>
-        </div>
-
-        <!-- 通常の手動記録フォーム -->
-        <form id="record-form">
-          <div class="form-group">
-            <label style="font-size: 0.85rem; color: var(--sub-text);">カテゴリ</label>
-            <select id="category" required></select>
-          </div>
-          <div class="form-group">
-            <label style="font-size: 0.85rem; color: var(--sub-text);">金額 (円 / G)</label>
-            <input type="number" id="amount" placeholder="例: 1000" min="1" required>
-          </div>
-          <button type="submit" class="btn" id="submit-btn">クエスト達成！ (EXPを獲得)</button>
-        </form>
-      </div>
-
-      <div class="card">
-        <h2 class="section-title">🗡️ 直近の記録</h2>
-        <ul class="history-list" id="history-list"></ul>
-      </div>
-    </div>
-
-    <div id="view-calendar" class="view-section">
-      <div class="card">
-        <div class="cal-header">
-          <button class="cal-btn" onclick="changeMonth(-1)">◀</button>
-          <h2 id="cal-month-label" style="font-size: 1.1rem; color: var(--accent-color);"></h2>
-          <button class="cal-btn" onclick="changeMonth(1)">▶</button>
-        </div>
-        <div class="cal-grid" style="margin-bottom: 4px;">
-          <div class="cal-day-header">日</div><div class="cal-day-header">月</div><div class="cal-day-header">火</div>
-          <div class="cal-day-header">水</div><div class="cal-day-header">木</div><div class="cal-day-header">金</div><div class="cal-day-header">土</div>
-        </div>
-        <div class="cal-grid" id="cal-body"></div>
-      </div>
-    </div>
-
-    <div id="view-achievements" class="view-section">
-      <div class="card">
-        <h2 class="section-title">🏆 称号一覧 <span id="achi-count">0 / 0</span></h2>
-        <div class="achi-list" id="achi-list"></div>
-      </div>
-    </div>
-  </div>
-
-  <nav class="bottom-nav">
-    <div class="nav-item active" onclick="switchTab('home', this)">
-      <span class="nav-icon">🗡️</span><span>記録</span>
-    </div>
-    <div class="nav-item" onclick="switchTab('calendar', this)">
-      <span class="nav-icon">📅</span><span>暦</span>
-    </div>
-    <div class="nav-item" onclick="switchTab('achievements', this)">
-      <span class="nav-icon">🏆</span><span>称号</span>
-    </div>
-  </nav>
-
-  <script>
-    
-const SUPABASE_URL = "https://uncyjfvnqdkddxvyljaa.supabase.co";
-const SUPABASE_PUBLISHABLE_KEY = "sb_publishable_Mp2hWVnTzu5TarN6sjb09w_4HFBVVeE";
-
-const supabaseClient = window.supabase.createClient(
+    .bottom-nav { position: fixed; bottom: 0; left: 0; width: 100%; background: var(--card-bg); border-top: 1px solid var(--border-color); display
